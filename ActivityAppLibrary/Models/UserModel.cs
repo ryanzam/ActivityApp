@@ -10,6 +10,6 @@
         public string Email { get; set; }
 
         public List<ProposalModel> Proposals { get; set; } = new();
-        public List<ProposalModel> ProposalsVoted { get; set; } = new();
+        public List<ProposalModel> ProposalsThumbsUpped { get; set; } = new();
     }
 }

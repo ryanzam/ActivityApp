@@ -9,12 +9,23 @@
         public string Description { get; set; }
         public ActivityModel Activity { get; set; }
         public UserModel Proposer { get; set; }
-        public HashSet<string> UpVotes { get; set; } = new();
+        public HashSet<string> UserThumbsUps { get; set; } = new();
         public StatusModel ProposalStatus { get; set; }
         public string Notes { get; set; }
-        public bool Approved { get; set; } = false;
-        public bool Archived { get; set; } = false;
-        public bool Dismissed { get; set; } = false;
+        public bool IsApproved { get; set; } = false;
+        public bool IsArchived { get; set; } = false;
+        public bool IsDismissed { get; set; } = false;
         public DateTime Created { get; set; } = DateTime.Now;
+
+        public ProposalModel()
+        {
+
+        }
+
+        public ProposalModel(ProposalModel proposal)
+        {
+            Id = proposal.Id;
+            Title = proposal.Title;
+        }
     }
 }
