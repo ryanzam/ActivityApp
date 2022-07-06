@@ -1,0 +1,101 @@
+﻿@page "/Userprofile"
+
+@attribute [Authorize]
+@inject AuthenticationStateProvider authProvider;
+@inject NavigationManager navManager
+@inject IProposalData propData
+@inject IUserData usrData
+
+<div class="row">
+	<div class="col-md-11">
+		<h3>My Account</h3>
+		<p>
+			<a href="MicrosoftIdentity/Account/EditProfile">Edit profile</a>
+		</p>
+	</div>
+	<div class="col-md-1"><span class="oi oi-x" @onclick="Close"></span></div>
+
+</div>
+
+@if(approved?.Count > 0)
+{
+	<div>
+	<h3>Approved Proposals</h3>
+	<p>Active proposals</p>
+	@foreach(var a in approved)
+	{
+		<hr />
+		<div>@a.Title</div>
+		<p>@a.Created.ToString("dd.MM.yyyy")</p>
+		<p>Thumbs Up: @a.UserThumbsUps.Count</p>
+		@if(a.ProposalStatus is not null)
+		{
+			<div>@a.ProposalStatus.Name</div>
+			<p>@a.Notes</p>
+		}
+	}
+	</div>
+}
+@if(dismissed?.Count > 0)
+{
+	<div>
+	<h3>Dismissed Proposals</h3>
+	<p>InActive proposals</p>
+	@foreach(var d in dismissed)
+	{
+		<hr />
+		<div>@d.Title</div>
+		<p>@d.Created.ToString("dd.MM.yyyy")</p>
+		<p>Thumbs Up: @d.UserThumbsUps.Count</p>
+		@if(d.ProposalStatus is not null)
+		{
+			<div>@d.ProposalStatus.Name</div>
+			<p>@d.Notes</p>
+		}
+	}
+	</div>
+}
+@if(archived?.Count > 0)
+{
+	<div>
+	<h3>Archived Proposals</h3>
+	<p>These proposals have been archived</p>
+	@foreach(var a in archived)
+	{
+		<hr />
+		<div>@a.Title</div>
+		<p>@a.Created.ToString("dd.MM.yyyy")</p>
+		<p>Thumbs Up: @a.UserThumbsUps.Count</p>
+		@if(a.ProposalStatus is not null)
+		{
+			<div>@a.ProposalStatus.Name</div>
+			<p>@a.Notes</p>
+		}
+	}
+	</div>
+}
+@code {
+	private UserModel signedInUser;
+	private List<ProposalModel> proposals;
+	private List<ProposalModel> approved;
+	private List<ProposalModel> dismissed;
+	private List<ProposalModel> archived;
+
+	protected async override Task OnInitializedAsync()
+	{
+		signedInUser = await authProvider.GetUsrFromAuthentication(usrData);
+		var userProps = await propData.GetUsersProposals(signedInUser.Id);
+
+		if(signedInUser is not null && userProps is not null)
+		{
+			proposals = userProps.OrderByDescending(p => p.Created).ToList();
+			approved = proposals.Where(p => p.IsApproved && p.IsDismissed == false && p.IsArchived == false).ToList();
+			dismissed = proposals.Where(p => p.IsDismissed).ToList();
+			archived = proposals.Where(p => p.IsArchived && p.IsDismissed == false).ToList();
+		}
+	}
+
+	private void Close(){
+		navManager.NavigateTo("/");
+	}
+}

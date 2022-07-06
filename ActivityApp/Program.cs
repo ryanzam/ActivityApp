@@ -1,6 +1,7 @@
 using ActivityApp;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Rewrite;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,17 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRewriter(new RewriteOptions().Add(ctx =>
+    {
+        if (ctx.HttpContext.Request.Path == "/MicrosoftIdentity/Account/SignedOut")
+        {
+            ctx.HttpContext.Response.Redirect("/");
+        };
+    }));
+
+app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

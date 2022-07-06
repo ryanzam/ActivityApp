@@ -1,0 +1,87 @@
+﻿@page "/Details/{Id}"
+
+@inject AuthenticationStateProvider authProvider
+@inject NavigationManager navManager
+@inject IUserData usrData
+@inject IProposalData propData
+
+<div class="row">
+	<div class="col-md-11">
+		<h1>Proposal Details</h1>
+	</div>
+	<div class="col-md-1"><span class="oi oi-x" @onclick="CloseDetail"></span></div>
+</div>
+
+<div class="border border-secondary rounded">
+	<div class="p-4">
+		@if(proposal is not null)
+		{
+			<div>
+				<div class="display-5 text-uppercase">@proposal.Title</div>
+				<div class="lead">@proposal.Description</div>
+				<div class="text-uppercase fs-4 text-muted mt-3"><strong>@proposal.Proposer.NickName</strong></div>
+				<div class="fs-5">@proposal.Activity.Name</div>
+			</div>
+			<div>
+				<div class="fs-4">@proposal.Created.ToString("dd.MM.yyyy")</div>
+				<div class="fs-2 mt-3" @onclick="ThumbsUp"><span class="oi oi-thumb-up"></span>
+					@proposal.UserThumbsUps.Count Vote(s)	
+				</div>
+			</div>
+		}
+	</div>
+</div>
+
+<div class=@("border border-secondary mt-4 p-4 rounded " + GetStatusClass(proposal?.ProposalStatus).ToString())>
+	<div class="fs-3 fw-bold">@proposal?.ProposalStatus?.Name</div>
+	<div class="fs-4 fw-light">@proposal?.Notes</div>
+</div>
+
+@code {
+	[Parameter]
+	public string Id { get; set; }
+	private ProposalModel proposal { get; set; }
+	private UserModel signedInUser;
+
+	protected async override Task OnInitializedAsync()
+	{
+		proposal = await propData.GetProposal(Id);
+	}
+
+	private async Task ThumbsUp()
+	{
+		if(signedInUser is not null)
+		{
+			if(proposal.UserThumbsUps.Add(signedInUser.Id) == false)
+			{
+				proposal.UserThumbsUps.Remove(signedInUser.Id);
+			}
+			await propData.ThumbsUpProposal(proposal.Id, signedInUser.Id);
+		} else
+		{
+			navManager.NavigateTo("/MicrosoftIdentity/Account/SignIn", true);
+		}
+	}
+
+	private string GetStatusClass(StatusModel s)
+	{
+		if(s?.Name is not null)
+		{
+			if(s?.Name == "UpComming")
+			{
+				return "text-light bg-warning";
+			} else if(s?.Name == "Dismissed")
+			{
+				return "text-light bg-danger";
+			} else
+			{
+				return "text-light bg-secondary";
+			}
+		} return "";
+	}
+
+	private void CloseDetail()
+	{
+		navManager.NavigateTo("/");
+	}
+}

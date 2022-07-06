@@ -1,7 +1,283 @@
 ﻿@page "/"
 
-<PageTitle>Index</PageTitle>
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 
-<h1>Hello, world!</h1>
+@inject AuthenticationStateProvider authProvider
+@inject ProtectedSessionStorage sesStorage
+@inject NavigationManager navManager
+@inject IActivityData actData
+@inject IStatusData staData
+@inject IProposalData propData
+@inject IUserData usrData
 
-Welcome to your new app.
+
+<PageTitle>Proposals</PageTitle>
+
+<div class="row mb-4">
+	<div class="col-md-8">
+		<h1>Proposals for the week!</h1>
+		</div>
+	<div class="col-md-4">
+		<button class="btn col-12 btn-outline-dark btn-lg mx-auto text-uppercase" @onclick="Create">Propose</button>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-md-4 mt-2 mb-2">@proposals?.Count Proposals</div>
+	<div class="btn-group col-md-4">
+		<button class="btn btn-outline-secondary btn-sm" @onclick="(()=> OrderByLastest(true))">Lastest</button>
+		<button class="btn btn-outline-secondary btn-sm" @onclick="(()=> OrderByLastest(false))">Popular</button>
+	</div>
+	<div class="col-md-4">
+		<input class="form-control" type="text" placeholder="Search..." @oninput="((t)=> OnSearch((string)t.Value))"/>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-md-8">
+		@if(proposals == null){
+			<p>Loading...</p>
+		} else
+		{
+			<Virtualize Items="@proposals" Context="p" OverscanCount="10">
+				<div class="card mt-2 bg-transparent">
+					<div class="card-body">
+						<h4 class="card-title" @onclick="(()=>Details(p))">@p.Title</h4>
+						<h5 class="card-subtitle mb-2 text-muted" @onclick="(()=> Details(p))">@p.Activity.Name</h5>
+						<h6 class="card-text"><span style="font-size:2rem;" @onclick="(()=> ThumbsUp(p))" class="@GetThumbsUpClass(p)"></span> @p.UserThumbsUps.Count Vote(s)</h6>
+					</div>
+					<div class="@GetStatusClass(p)">
+						<h6 class="text-capitalize">@p.ProposalStatus?.Name</h6>
+					</div>
+			</div>
+			</Virtualize>
+		}
+	</div>
+
+	<div class="col-md-4">
+		@if(activities is not null)
+		{
+			<div class="card mt-2">
+				<div class="card-body">
+					<h5 class="card-title text-uppercase">Activity</h5>
+					<p class="text-class" @onclick="(() => OnClickActivity())">All</p>
+					@foreach(var a in activities)
+					{
+						<p class="text-class" @onclick="(()=> OnClickActivity(a.Name))">@a.Name</p>
+					}
+				</div>
+			</div>
+		}
+		@if(status is not null)
+		{
+			<div class="card mt-2">
+				<div class="card-body">
+					<h5 class="card-title text-uppercase">Status</h5>
+					<p class="text-class" @onclick="(() => OnClickStatus())">All</p>
+					@foreach(var s in status)
+					{
+						<p class="text-class" @onclick="(()=>OnClickStatus(s.Name))">@s.Name</p>
+					}
+				</div>
+			</div>
+		}
+	</div>
+</div>
+
+@code {
+	private List<ActivityModel> activities;
+	private List<StatusModel> status;
+	private List<ProposalModel> proposals;
+	private UserModel signedInUser;
+
+	bool isSortedByNew = true;
+	private string searchText = "";
+	private string selectedActivity = "All";
+	private string selectedStatus = "All";
+
+	protected async override Task OnInitializedAsync()
+	{
+		activities = await actData.GetActivities();
+		status = await staData.GetStatuses();
+		signedInUser = await authProvider.GetUsrFromAuthentication(usrData);
+		await GetVerifyUser();
+	}
+
+	protected async override Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await GetFilterState();
+			await FilterProposals();
+			StateHasChanged();
+		}
+	}
+
+	private void Create(){
+		if(signedInUser is null)
+		{
+			navManager.NavigateTo("/MicrosoftIdentity/Account/SignIn", true);
+		} else {
+			navManager.NavigateTo("/CreateProposal");
+		}
+
+	}
+
+	private string GetStatusClass(ProposalModel p)
+	{
+		if(p.ProposalStatus?.Name is not null)
+		{
+			if(p.ProposalStatus?.Name == "UpComming")
+			{
+				return "card-footer bg-warning";
+			} else if(p.ProposalStatus?.Name == "Dismissed")
+			{
+				return "card-footer bg-danger";
+			} else
+			{
+				return "card-footer bg-secondary";
+			}
+		} return "";
+	}
+
+	private string GetThumbsUpClass(ProposalModel p)
+	{
+		if(p.UserThumbsUps is null || p.UserThumbsUps.Count == 0){
+			return "oi oi-thumb-up";
+		} else if (p.UserThumbsUps.Contains(signedInUser?.Id))
+		{
+			return "oi oi-thumb-up text-secondary";
+		} else
+		{
+			return "oi oi-thumb-up text-primary";
+		}
+	}
+
+	private async Task GetVerifyUser()
+	{
+		var authState = await authProvider.GetAuthenticationStateAsync();
+		var objId = authState.User.Claims.FirstOrDefault(cl => cl.Type.Contains("objectidentifier"))?.Value;
+
+		if (string.IsNullOrWhiteSpace(objId) == false)
+		{
+			signedInUser = await usrData.GetUserFromAuth(objId) ?? new();
+
+			string nickName = authState.User.Claims.FirstOrDefault(cl => cl.Type.Equals("name"))?.Value;
+
+			bool isChanged = false;
+			if(objId.Equals(signedInUser.ObjectID) == false)
+			{
+				isChanged = true;
+				signedInUser.ObjectID = objId;
+			}
+			if(nickName.Equals(signedInUser.NickName) == false)
+			{
+				isChanged = true;
+				signedInUser.NickName = nickName;
+			}
+			if (isChanged)
+			{
+				if(string.IsNullOrWhiteSpace(signedInUser.Id)){
+					await usrData.CreateUser(signedInUser);
+				} else
+				{
+					await usrData.UpdateUser(signedInUser);
+				}
+			}
+		}
+	}
+
+	private async Task GetFilterState()
+	{
+		var boolRes = await sesStorage.GetAsync<bool>(nameof(isSortedByNew));
+		isSortedByNew = boolRes.Success ? boolRes.Value : true;
+
+		var strRes = await sesStorage.GetAsync<string>(nameof(selectedActivity));
+		selectedActivity = strRes.Success ? strRes.Value : "All";
+		strRes = await sesStorage.GetAsync<string>(nameof(selectedStatus));
+		selectedStatus = strRes.Success ? strRes.Value : "All";
+		strRes = await sesStorage.GetAsync<string>(nameof(searchText));
+		searchText = strRes.Success ? strRes.Value : "";
+	}
+
+	private async Task FilterProposals()
+	{
+		var res = await propData.GetApprovedProposals();
+		if (isSortedByNew)
+		{
+			res = res.OrderByDescending(p => p.UserThumbsUps.Count).ThenByDescending(p => p.Created).ToList();
+		}
+		if(selectedActivity != "All")
+		{
+			res = res.Where(p => p.Activity.Name == selectedActivity).ToList();
+		}
+		if(selectedStatus != "All")
+		{
+			res = res.Where(p => p.ProposalStatus.Name == selectedStatus).ToList();
+		}
+		if(string.IsNullOrEmpty(searchText) == false)
+		{
+			res = res.Where(p => p.Title.Contains(searchText, StringComparison.InvariantCultureIgnoreCase) || 
+								p.Description.Contains(searchText, StringComparison.InvariantCultureIgnoreCase)).ToList();
+		}
+		proposals = res;
+		await SaveFilterState();
+	}
+
+	private async Task SaveFilterState()
+	{
+		await sesStorage.SetAsync(nameof(isSortedByNew), isSortedByNew);
+		await sesStorage.SetAsync(nameof(selectedActivity), selectedActivity);
+		await sesStorage.SetAsync(nameof(selectedStatus), selectedStatus);
+		await sesStorage.SetAsync(nameof(searchText), searchText);
+
+	}
+
+	private async Task OrderByLastest(bool isNew)
+	{
+		isSortedByNew = isNew;
+		await FilterProposals();
+	}
+
+	private async Task OnSearch(string text)
+	{
+		searchText = text;
+		await FilterProposals();
+	}
+
+	private async Task OnClickActivity(string activity = "All")
+	{
+		selectedActivity = activity;
+		await FilterProposals();
+	}
+	private async Task OnClickStatus(string status = "All")
+	{
+		selectedStatus = status;
+		await FilterProposals();
+	}
+
+	private async Task ThumbsUp(ProposalModel p)
+	{
+		if(signedInUser is not null)
+		{
+			if(p.UserThumbsUps.Add(signedInUser.Id) == false)
+			{
+				p.UserThumbsUps.Remove(signedInUser.Id);
+			}
+			await propData.ThumbsUpProposal(p.Id, signedInUser.Id);
+
+			if(isSortedByNew == false)
+			{
+				proposals.OrderByDescending(p => p.UserThumbsUps.Count).ThenByDescending(p => p.Created).ToList();	
+			}
+		} else
+		{
+			navManager.NavigateTo("/MicrosoftIdentity/Account/SignIn", true);
+		}
+	}
+
+	private void Details(ProposalModel p)
+	{
+		navManager.NavigateTo($"/Details/{p.Id}");
+	}
+}

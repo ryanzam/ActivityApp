@@ -1,7 +1,20 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Finlandica:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,600;1,600&display=swap');
 
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Finlandica', Helvetica, sans-serif;
+    font-size: 16px;
+}
+
+body {
+    background: url('https://images.pexels.com/photos/1166643/pexels-photo-1166643.jpeg?auto=compress&cs=tinysrgb&w=1600') center fixed;
+    background-size: cover;
+}
+
+h1, h2, h3 {
+    font-family: 'Titillium Web', Helvetica, sans-serif;
+    font-weight: 600;
 }
 
 h1:focus {
@@ -9,7 +22,17 @@ h1:focus {
 }
 
 a, .btn-link {
-    color: #0071c1;
+    color: black;
+}
+
+.links{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.links-item {
+    text-decoration: none;
+    padding-left: 1rem;
 }
 
 .btn-primary {
