@@ -1,0 +1,120 @@
+﻿@page "/Admin"
+@attribute [Authorize(Policy = "Admin")]
+@inject NavigationManager navManager
+@inject IProposalData propData
+@inject IUserData usrData
+
+<div class="row">
+	<div class="col-md-11">
+		<h1>Pending Proposals</h1>
+	</div>
+	<div class="col-md-1"><span class="oi oi-x" @onclick="Close"></span></div>
+</div>
+<div class="mt-3 mb-3">
+	<div class="fs-5">@proposals?.Count Proposals pending...</div>
+</div>
+
+@if(proposals is not null)
+{
+	foreach(var p in proposals)
+	{
+		<div class="row border border-secondary p-3 mt-3 rounded">
+			<div class="col-md-10">
+				<div class="col-md-8">
+					@if(currTitle == p.Id)
+					{
+						<EditForm Model="@editedTitle" OnSubmit="(() => SaveTitle(p))">
+							<InputText class="form-control col-6" @bind-Value="editedTitle" />
+							<button class="btn btn-dark" type="submit">Submit</button>
+							<button class="btn btn-danger" @onclick="(()=> currTitle = string.Empty)">Cancel</button>
+						</EditForm>
+					} else
+					{
+						@p.Title <span class="oi oi-pencil" @onclick="(()=> EditTitle(p))"></span>
+					}
+				</div>
+				<div>@p.Activity.Name</div>
+				@*<div>@p.Proposer.NickName</div>*@
+				<div>
+					@if(currDescription == p.Id)
+					{
+						<EditForm Model="@editedDescription" OnSubmit="(() => SaveDescription(p))">
+							<InputTextArea @bind-Value="editedDescription" class="form-control" />
+							<button class="btn btn-dark" type="submit">Submit</button>
+							<button class="btn btn-danger" @onclick="(()=> currDescription = string.Empty)">Cancel</button>
+						</EditForm>
+					} else
+					{
+						@p.Description <span class="oi oi-pencil" @onclick="(()=> EditDescription(p))"></span>
+					}
+				</div>
+			</div>
+			<div class="col-md-2 float-end">
+				<button class="btn btn-outline-secondary" @onclick="(() => ApproveProposal(p))">Approve</button>
+				<button class="btn btn-outline-danger" @onclick="(() => DismissProposal(p))">Dismiss</button>
+			</div>
+		</div>
+	}
+}
+
+@code {
+	private List<ProposalModel> proposals;
+	private ProposalModel editingModel;
+	private string currTitle = "";
+	private string editedTitle = "";
+	private string currDescription = "";
+	private string editedDescription = "";
+
+	protected override async Task OnInitializedAsync()
+	{
+		proposals = await propData.GetNotApprovedProposals();
+	}
+
+	private async Task ApproveProposal(ProposalModel p)
+	{
+		p.IsApproved = true;
+		proposals.Remove(p);
+		await propData.UpdateProposal(p);
+	}
+
+	private async Task DismissProposal(ProposalModel p)
+	{
+		p.IsDismissed = true;
+		proposals.Remove(p);
+		await propData.UpdateProposal(p);
+	}
+
+	private void EditTitle(ProposalModel p)
+	{
+		editingModel = p;
+		editedTitle = p.Title;
+		currTitle = p.Id;
+		currDescription = "";
+	}
+
+	private void EditDescription(ProposalModel p)
+	{
+		editingModel = p;
+		editedDescription = p.Description;
+		currTitle = "";
+		currDescription = p.Id;
+	}
+
+	private async Task SaveTitle(ProposalModel p)
+	{
+		currTitle = string.Empty;
+		p.Title = editedTitle;
+		await propData.UpdateProposal(p);
+	}
+
+	private async Task SaveDescription(ProposalModel p)
+	{
+		currDescription = string.Empty;
+		p.Description = editedDescription;
+		await propData.UpdateProposal(p);
+	}
+
+	private void Close(){
+		navManager.NavigateTo("/");
+	}
+}

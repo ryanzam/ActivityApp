@@ -1,0 +1,16 @@
+﻿@inject NavigationManager navManager
+
+<div class="row mt-2">
+		<div class="col-md-11">
+			<div class="display-5">Require Authorization</div>
+			<p>You need to signin to post proposal. Or, have admin rights to manage proposals.</p>
+		</div>
+		<div class="col-md-1"><span class="oi oi-x" @onclick="Close"></span></div>
+</div>
+
+
+@code {
+	private void Close(){
+		navManager.NavigateTo("/");
+	}
+}

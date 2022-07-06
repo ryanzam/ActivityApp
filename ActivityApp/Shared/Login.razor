@@ -1,0 +1,12 @@
+﻿<AuthorizeView Policy="Admin">
+	<a class="links-item" href="/admin">Admin</a>
+</AuthorizeView>
+<AuthorizeView>
+	<Authorized>
+		<a class="links-item" href="/UserProfile">User Profile</a>
+		<a class="links-item" href="/MicrosoftIdentity/Account/SignOut">Sign out</a>
+	</Authorized>
+	<NotAuthorized>
+		<a class="links-item" href="MicrosoftIdentity/Account/SignIn">Sign in</a>
+	</NotAuthorized>
+</AuthorizeView>
