@@ -10,12 +10,13 @@
 @inject IProposalData propData
 @inject IUserData usrData
 
+@inject IToastService toastService
 
 <PageTitle>Proposals</PageTitle>
 
 <div class="row mb-4">
 	<div class="col-md-8">
-		<h1>Proposals for the week!</h1>
+		<h1>Proposals for activity!</h1>
 		</div>
 	<div class="col-md-4">
 		<button class="btn col-12 btn-outline-dark btn-lg mx-auto text-uppercase" @onclick="Create">Propose</button>
@@ -44,7 +45,8 @@
 					<div class="card-body">
 						<h4 class="card-title" @onclick="(()=>Details(p))">@p.Title</h4>
 						<h5 class="card-subtitle mb-2 text-muted" @onclick="(()=> Details(p))">@p.Activity.Name</h5>
-						<h6 class="card-text"><span style="font-size:2rem;" @onclick="(()=> ThumbsUp(p))" class="@GetThumbsUpClass(p)"></span> @p.UserThumbsUps.Count Vote(s)</h6>
+						<p class="card-text fst-italic">Activity Date : @p?.ActivityDate.ToString("dd.MM.yyyy HH:MM")</p>
+						<h6 class="card-text"><span style="font-size:2rem;" @onclick="(()=> ThumbsUp(p))" class="@GetThumbsUpClass(p)"></span> @p.UserThumbsUps.Count Thumbs Up</h6>
 					</div>
 					<div class="@GetStatusClass(p)">
 						<h6 class="text-capitalize">@p.ProposalStatus?.Name</h6>
@@ -135,7 +137,7 @@
 				return "card-footer bg-danger";
 			} else
 			{
-				return "card-footer bg-secondary";
+				return "card-footer bg-secondary text-light";
 			}
 		} return "";
 	}
@@ -143,13 +145,13 @@
 	private string GetThumbsUpClass(ProposalModel p)
 	{
 		if(p.UserThumbsUps is null || p.UserThumbsUps.Count == 0){
-			return "oi oi-thumb-up";
+			return "oi oi-thumb-up text-secondary";
 		} else if (p.UserThumbsUps.Contains(signedInUser?.Id))
 		{
-			return "oi oi-thumb-up text-secondary";
+			return "oi oi-thumb-up text-primary";
 		} else
 		{
-			return "oi oi-thumb-up text-primary";
+			return "oi oi-thumb-up text-secondary";
 		}
 	}
 
@@ -263,8 +265,10 @@
 			if(p.UserThumbsUps.Add(signedInUser.Id) == false)
 			{
 				p.UserThumbsUps.Remove(signedInUser.Id);
+				toastService.ShowInfo("Thumbs Up removed");
 			}
 			await propData.ThumbsUpProposal(p.Id, signedInUser.Id);
+			toastService.ShowInfo("Thumbs Up added!");
 
 			if(isSortedByNew == false)
 			{

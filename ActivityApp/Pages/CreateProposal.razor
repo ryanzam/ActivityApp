@@ -7,6 +7,8 @@
 @inject IActivityData actData
 @inject IUserData usrData
 
+@inject IToastService toastService
+
 <div class="row">
 	<div class="col-md-11">
 		<h1>Propose your idea!</h1>
@@ -48,6 +50,11 @@
 				<div id="activityHelp" class="form-text">Select the activity type from drop down.</div>
 			</div>
 			<div class="mt-3">
+				<label class="form-label" for="date">Activity Date</label>
+				<InputDate Type="InputDateType.DateTimeLocal" class="form-control" id="date" @bind-Value="proposal.ActivityDate" aria-describedby="actHelp"/>
+				<div id="actHelp" class="form-text">Date and time of the activity proposal.</div>
+			</div>
+			<div class="mt-3">
 				<button class="btn btn-outline-dark" type="submit">Post your proposal</button>
 			</div>
 		</EditForm>	
@@ -72,9 +79,25 @@
 		p.Description = proposal.Description;
 		p.Activity = activities.Where(a => a.Id == proposal.ActivityId).FirstOrDefault();
 		p.Proposer = new SimpleUserModel(signInUser);
-
+		p.ActivityDate = proposal.ActivityDate;
+		p.ProposalStatus = CheckProposalStatus(proposal.ActivityDate);
 		await propData.CreateProposal(p);
+		toastService.ShowSuccess("Proposal created, waiting for approval.");
 		CloseCreateProposal();
+	}
+
+	private StatusModel CheckProposalStatus(DateTime d)
+	{
+		StatusModel s = new();
+		if (CheckDateTimeHelpers.CheckIfValid(d))
+		{
+			s.Name = "UpComming";
+			return s;
+		} else
+		{
+			s.Name = "Done";
+			return s;
+		}
 	}
 
 	private void CloseCreateProposal()

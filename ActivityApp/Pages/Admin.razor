@@ -30,7 +30,7 @@
 						</EditForm>
 					} else
 					{
-						@p.Title <span class="oi oi-pencil" @onclick="(()=> EditTitle(p))"></span>
+						<h6>@p.Title <span class="oi oi-pencil" @onclick="(()=> EditTitle(p))"></span></h6>
 					}
 				</div>
 				<div>@p.Activity.Name</div>
@@ -48,6 +48,7 @@
 						@p.Description <span class="oi oi-pencil" @onclick="(()=> EditDescription(p))"></span>
 					}
 				</div>
+				<div class="fst-italic">Event Date : @p.ActivityDate</div>
 			</div>
 			<div class="col-md-2 float-end">
 				<button class="btn btn-outline-secondary" @onclick="(() => ApproveProposal(p))">Approve</button>
