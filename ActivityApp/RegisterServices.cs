@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+﻿using Blazored.Toast;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 
@@ -28,6 +29,8 @@ namespace ActivityApp
                     policy.RequireClaim("jobTitle", "Admin");
                 });
             });
+
+            builder.Services.AddBlazoredToast();
         }
     }
 }

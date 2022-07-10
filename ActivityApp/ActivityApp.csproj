@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Blazored.Toast" Version="3.2.2" />
     <PackageReference Include="Microsoft.Identity.Web" Version="1.25.1" />
     <PackageReference Include="Microsoft.Identity.Web.UI" Version="1.25.1" />
   </ItemGroup>

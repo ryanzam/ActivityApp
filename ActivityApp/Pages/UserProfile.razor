@@ -9,6 +9,7 @@
 <div class="row">
 	<div class="col-md-11">
 		<h3>My Account</h3>
+		<div class="fs-5 fw-semibold"><span class="oi oi-badge"></span> @signedInUser?.NickName  <span class="oi oi-link-intact"></span>@signedInUser?.Email</div>
 		<p>
 			<a href="MicrosoftIdentity/Account/EditProfile">Edit profile</a>
 		</p>
@@ -20,8 +21,7 @@
 @if(approved?.Count > 0)
 {
 	<div>
-	<h3>Approved Proposals</h3>
-	<p>Active proposals</p>
+	<h6>Approved Proposals</h6>
 	@foreach(var a in approved)
 	{
 		<hr />
@@ -38,9 +38,8 @@
 }
 @if(dismissed?.Count > 0)
 {
-	<div>
-	<h3>Dismissed Proposals</h3>
-	<p>InActive proposals</p>
+	<div class="mt-5">
+	<h6>Dismissed Proposals</h6>
 	@foreach(var d in dismissed)
 	{
 		<hr />
@@ -57,9 +56,8 @@
 }
 @if(archived?.Count > 0)
 {
-	<div>
-	<h3>Archived Proposals</h3>
-	<p>These proposals have been archived</p>
+	<div class="mt-5">
+	<h6 class="text-">Archived Proposals</h6>
 	@foreach(var a in archived)
 	{
 		<hr />

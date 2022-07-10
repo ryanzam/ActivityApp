@@ -16,7 +16,7 @@
         public bool IsArchived { get; set; } = false;
         public bool IsDismissed { get; set; } = false;
         public DateTime Created { get; set; } = DateTime.Now;
-
+        public DateTime ActivityDate { get; set; }
         public ProposalModel()
         {
 
