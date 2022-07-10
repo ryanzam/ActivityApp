@@ -34,7 +34,7 @@
 					}
 				</div>
 				<div>@p.Activity.Name</div>
-				@*<div>@p.Proposer.NickName</div>*@
+				<div>@p.Proposer?.NickName</div>
 				<div>
 					@if(currDescription == p.Id)
 					{

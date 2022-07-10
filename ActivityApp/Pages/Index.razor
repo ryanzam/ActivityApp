@@ -26,7 +26,7 @@
 <div class="row">
 	<div class="col-md-4 mt-2 mb-2">@proposals?.Count Proposals</div>
 	<div class="btn-group col-md-4">
-		<button class="btn btn-outline-secondary btn-sm" @onclick="(()=> OrderByLastest(true))">Lastest</button>
+		<button class="btn btn-outline-secondary btn-sm" @onclick="(()=> OrderByLastest(true))">Latest</button>
 		<button class="btn btn-outline-secondary btn-sm" @onclick="(()=> OrderByLastest(false))">Popular</button>
 	</div>
 	<div class="col-md-4">
@@ -41,11 +41,12 @@
 		} else
 		{
 			<Virtualize Items="@proposals" Context="p" OverscanCount="10">
-				<div class="card mt-2 bg-transparent">
+				<div class="card mt-2 bg-light">
 					<div class="card-body">
 						<h4 class="card-title" @onclick="(()=>Details(p))">@p.Title</h4>
 						<h5 class="card-subtitle mb-2 text-muted" @onclick="(()=> Details(p))">@p.Activity.Name</h5>
-						<p class="card-text fst-italic">Activity Date : @p?.ActivityDate.ToString("dd.MM.yyyy HH:MM")</p>
+						<p class="card-text">Proposer : @p.Proposer.NickName</p>
+						<p class="card-text">Activity Date : @p?.ActivityDate.ToString("dd.MM.yyyy HH:mm")</p>
 						<h6 class="card-text"><span style="font-size:2rem;" @onclick="(()=> ThumbsUp(p))" class="@GetThumbsUpClass(p)"></span> @p.UserThumbsUps.Count Thumbs Up</h6>
 					</div>
 					<div class="@GetStatusClass(p)">
@@ -207,7 +208,7 @@
 		var res = await propData.GetApprovedProposals();
 		if (isSortedByNew)
 		{
-			res = res.OrderByDescending(p => p.UserThumbsUps.Count).ThenByDescending(p => p.Created).ToList();
+			res = res.OrderByDescending(p => p.UserThumbsUps.Count).ThenByDescending(p => p.ActivityDate).ToList();
 		}
 		if(selectedActivity != "All")
 		{
@@ -215,7 +216,7 @@
 		}
 		if(selectedStatus != "All")
 		{
-			res = res.Where(p => p.ProposalStatus.Name == selectedStatus).ToList();
+			res = res.Where(p => p.ProposalStatus?.Name == selectedStatus).ToList();
 		}
 		if(string.IsNullOrEmpty(searchText) == false)
 		{
@@ -272,10 +273,11 @@
 
 			if(isSortedByNew == false)
 			{
-				proposals.OrderByDescending(p => p.UserThumbsUps.Count).ThenByDescending(p => p.Created).ToList();	
+				proposals.OrderByDescending(p => p.UserThumbsUps.Count).ThenByDescending(p => p.ActivityDate).ToList();	
 			}
 		} else
 		{
+			toastService.ShowInfo("Please signin to thumbs up!");
 			navManager.NavigateTo("/MicrosoftIdentity/Account/SignIn", true);
 		}
 	}
